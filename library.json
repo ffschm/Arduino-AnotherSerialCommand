@@ -1,11 +1,11 @@
 {
-  "name": "SerialCommand",
+  "name": "AnotherSerialCommand",
   "keywords": "serial, communication, protocol",
   "description": "A Wiring/Arduino library to tokenize and parse commands received over a serial port.",
   "repository":
   {
     "type": "git",
-    "url": "https://github.com/kroimon/Arduino-SerialCommand.git"
+    "url": "https://github.com/ffschm/Arduino-AnotherSerialCommand.git"
   },
   "frameworks": "arduino",
   "platforms": "atmelavr"
