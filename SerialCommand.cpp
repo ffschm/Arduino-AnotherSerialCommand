@@ -83,34 +83,46 @@ void SerialCommand::readSerial() {
         Serial.println(buffer);
       #endif
 
-      char *command = strtok_r(buffer, delim, &last);   // Search for command at start of buffer
-      if (command != NULL) {
-        boolean matched = false;
-        for (int i = 0; i < commandCount; i++) {
+      // Search for command at start of buffer
+      boolean matched = false;
+      for (int i = 0; i < commandCount; i++) {
+        #ifdef SERIALCOMMAND_DEBUG
+          Serial.print("Comparing to [");
+          Serial.print(String(commandList[i].command));
+          Serial.println("]");
+        #endif
+
+        const String buffer_str = String(buffer);
+
+        // Compare the beginning of the buffer against the list of known commands for a match
+        if (buffer_str.startsWith(commandList[i].command)) {
           #ifdef SERIALCOMMAND_DEBUG
-            Serial.print("Comparing [");
-            Serial.print(command);
-            Serial.print("] to [");
-            Serial.print(commandList[i].command);
-            Serial.println("]");
+            Serial.print("Matched Command: ");
+            Serial.println(commandList[i].command);
           #endif
 
-          // Compare the found command against the list of known commands for a match
-          if (strncmp(command, commandList[i].command, SERIALCOMMAND_MAXCOMMANDLENGTH) == 0) {
-            #ifdef SERIALCOMMAND_DEBUG
-              Serial.print("Matched Command: ");
-              Serial.println(command);
-            #endif
-
-            // Execute the stored handler function for the command
-            (*commandList[i].function)();
-            matched = true;
-            break;
+          // Remove the leading chars containing the parsed command to ignore it during following argument parsing
+          // memmove(buffer+2, buffer + strlen(commandList[i].command) + 1, strlen(buffer) - strlen(commandList[i].command) - 1);
+          for (size_t j = 0; j < strlen(commandList[i].command); j++) {
+            buffer[j] = 'x';
           }
+          buffer[strlen(commandList[i].command)] = ',';
+
+          #ifdef SERIALCOMMAND_DEBUG
+            Serial.print("Arguments: ");
+            Serial.println(buffer);
+          #endif
+          // Initialize last variable for strtok_r
+          strtok_r(buffer, delim, &last);
+
+          // Execute the stored handler function for the command
+          (*commandList[i].function)();
+          matched = true;
+          break;
         }
-        if (!matched && (defaultHandler != NULL)) {
-          (*defaultHandler)(command);
-        }
+      }
+      if (!matched && (defaultHandler != NULL)) {
+        (*defaultHandler)(buffer);
       }
       clearBuffer();
     }
